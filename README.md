@@ -2,7 +2,6 @@
 
 > **Note:** This repository is a maintained fork of the original [idealo/image-quality-assessment](https://idealo.github.io/image-quality-assessment/) project, which has been deprecated. This fork is being actively updated and maintained by [@dr-robert-li](https://github.com/dr-robert-li) with improvements including multi-architecture support (ARM64/Apple Silicon), updated dependencies, and integration with newer models like MUSIQ.
 
-[![Build Status](https://travis-ci.org/idealo/image-quality-assessment.svg?branch=master)](https://travis-ci.org/idealo/image-quality-assessment)
 [![License](https://img.shields.io/badge/License-Apache%202.0-orange.svg)](https://github.com/idealo/image-quality-assessment/blob/master/LICENSE)
 
 This repository provides implementations for image quality assessment models:
