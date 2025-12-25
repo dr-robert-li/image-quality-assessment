@@ -3,6 +3,7 @@ import importlib
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dropout, Dense
 from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers.schedules import InverseTimeDecay
 from utils.losses import earth_movers_distance
 
 
@@ -41,7 +42,16 @@ class Nima:
         self.nima_model = Model(self.base_model.inputs, x)
 
     def compile(self):
-        self.nima_model.compile(optimizer=Adam(lr=self.learning_rate, decay=self.decay), loss=self.loss)
+        if self.decay > 0:
+            lr_schedule = InverseTimeDecay(
+                initial_learning_rate=self.learning_rate,
+                decay_steps=1,
+                decay_rate=self.decay
+            )
+            optimizer = Adam(learning_rate=lr_schedule)
+        else:
+            optimizer = Adam(learning_rate=self.learning_rate)
+        self.nima_model.compile(optimizer=optimizer, loss=self.loss)
 
     def preprocessing_function(self):
         return self.base_module.preprocess_input

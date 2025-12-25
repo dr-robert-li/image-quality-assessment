@@ -17,7 +17,7 @@ The provided code allows to use any of the pre-trained models in [Keras](https:/
 
 Read the full documentation at: [https://idealo.github.io/image-quality-assessment/](https://idealo.github.io/image-quality-assessment/).
 
-Image quality assessment is compatible with Python 3.6 and is distributed under the Apache 2.0 license. We welcome all kinds of contributions, especially new model architectures and/or hyperparameter combinations that improve the performance of the currently published models (see [Contribute](#contribute)).
+Image quality assessment is compatible with Python 3.9+ and is distributed under the Apache 2.0 license. We welcome all kinds of contributions, especially new model architectures and/or hyperparameter combinations that improve the performance of the currently published models (see [Contribute](#contribute)).
 
 
 ## Trained models

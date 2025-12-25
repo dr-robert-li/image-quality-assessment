@@ -87,8 +87,8 @@ def train(
     nima.compile()
     nima.nima_model.summary()
 
-    nima.nima_model.fit_generator(
-        generator=training_generator,
+    nima.nima_model.fit(
+        training_generator,
         validation_data=validation_generator,
         epochs=epochs_train_dense,
         verbose=1,
@@ -107,8 +107,8 @@ def train(
     nima.compile()
     nima.nima_model.summary()
 
-    nima.nima_model.fit_generator(
-        generator=training_generator,
+    nima.nima_model.fit(
+        training_generator,
         validation_data=validation_generator,
         epochs=epochs_train_dense + epochs_train_all,
         initial_epoch=epochs_train_dense,
