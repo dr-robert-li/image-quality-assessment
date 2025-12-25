@@ -1,0 +1,10 @@
+{
+  "model_name": "MUSIQ",
+  "model_type": "SavedModel",
+  "dataset": "AVA",
+  "score_range": [1, 10],
+  "input_format": "raw_bytes",
+  "description": "Multi-scale Image Quality Transformer (MUSIQ) trained on AVA aesthetic dataset",
+  "paper": "https://arxiv.org/abs/2108.05997",
+  "citation": "@inproceedings{ke2021musiq, title={MUSIQ: Multi-scale image quality transformer}, author={Ke, Junjie and Wang, Qifei and Wang, Yilin and Milanfar, Peyman and Yang, Feng}, booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision}, year={2021}}"
+}

@@ -1,48 +1,48 @@
 # Image Quality Assessment
 
+> **Note:** This repository is a maintained fork of the original [idealo/image-quality-assessment](https://idealo.github.io/image-quality-assessment/) project, which has been deprecated. This fork is being actively updated and maintained by [@dr-robert-li](https://github.com/dr-robert-li) with improvements including multi-architecture support (ARM64/Apple Silicon), updated dependencies, and integration with newer models like MUSIQ.
+
 [![Build Status](https://travis-ci.org/idealo/image-quality-assessment.svg?branch=master)](https://travis-ci.org/idealo/image-quality-assessment)
-[![Docs](https://img.shields.io/badge/docs-online-brightgreen)](https://idealo.github.io/image-quality-assessment/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-orange.svg)](https://github.com/idealo/image-quality-assessment/blob/master/LICENSE)
 
-This repository provides an implementation of an aesthetic and technical image quality model based on Google's research paper ["NIMA: Neural Image Assessment"](https://arxiv.org/pdf/1709.05424.pdf). You can find a quick introduction on their [Research Blog](https://research.googleblog.com/2017/12/introducing-nima-neural-image-assessment.html).
+This repository provides implementations for image quality assessment models:
 
-NIMA consists of two models that aim to predict the aesthetic and technical quality of images, respectively. The models are trained via transfer learning, where ImageNet pre-trained CNNs are used and fine-tuned for the classification task.
+1. **NIMA (Neural Image Assessment)** - Based on Google's research paper ["NIMA: Neural Image Assessment"](https://arxiv.org/pdf/1709.05424.pdf). NIMA uses transfer learning with ImageNet pre-trained CNNs to predict aesthetic and technical image quality.
 
-For more information on how we used NIMA for our specifc problem, we did a write-up on two blog posts:
+2. **MUSIQ (Multi-scale Image Quality Transformer)** - A state-of-the-art Vision Transformer-based model from Google Research that can handle native resolution images. Based on the paper ["MUSIQ: Multi-scale Image Quality Transformer"](https://arxiv.org/abs/2108.05997).
 
-* NVIDIA Developer Blog: [Deep Learning for Classifying Hotel Aesthetics Photos](https://devblogs.nvidia.com/deep-learning-hotel-aesthetics-photos/)
-* Medium: [Using Deep Learning to automatically rank millions of hotel images](https://medium.com/idealo-tech-blog/using-deep-learning-to-automatically-rank-millions-of-hotel-images-c7e2d2e5cae2)
+## Available Models
 
-The provided code allows to use any of the pre-trained models in [Keras](https://keras.io/applications/). We further provide Docker images for local CPU training and remote GPU training on AWS EC2, as well as pre-trained models on the [AVA](https://github.com/ylogx/aesthetics/tree/master/data/ava) and [TID2013](http://www.ponomarenko.info/tid2013.htm) datasets.
+### NIMA Models (MobileNet)
+Pre-trained models for aesthetic and technical quality assessment using MobileNet backbone.
 
-Read the full documentation at: [https://idealo.github.io/image-quality-assessment/](https://idealo.github.io/image-quality-assessment/).
-
-Image quality assessment is compatible with Python 3.9+ and is distributed under the Apache 2.0 license. We welcome all kinds of contributions, especially new model architectures and/or hyperparameter combinations that improve the performance of the currently published models (see [Contribute](#contribute)).
-
-
-## Trained models
 | <sub>Predictions from aesthetic model</sub>
 | :--:
 | ![](readme_figures/images_aesthetic/aesthetic1.jpg_aesthetic.svg)
-
 
 | <sub>Predictions from technical model</sub>
 | :--:
 | ![](readme_figures/images_technical/techncial3.jpgtechnical.svg)
 
-
-
-
-We provide trained models, for both aesthetic and technical classifications, that use MobileNet as the base CNN. The models and their respective config files are stored under `models/MobileNet`. They achieve the following performance
-
-Model      | Dataset | EMD  | LCC | SRCC  
------ |  ------- | ---  | --- | ----  
+Model      | Dataset | EMD  | LCC | SRCC
+----- |  ------- | ---  | --- | ----
 MobileNet aesthetic | AVA | 0.071 |0.626|0.609
 MobileNet technical | TID2013 | 0.107 |0.652|0.675
 
+### MUSIQ Model
+Google's Multi-scale Image Quality Transformer trained on the AVA aesthetic dataset.
+
+| Feature | Description |
+|---------|-------------|
+| Input | Raw JPEG/PNG image bytes (native resolution) |
+| Output | Aesthetic quality score [1-10] |
+| Architecture | Vision Transformer with multi-scale processing |
+| Model format | TensorFlow SavedModel |
+
+**Model source:** [kaggle.com/models/google/musiq](https://www.kaggle.com/models/google/musiq)
 
 
-## Getting started
+## Getting Started
 
 ### Option 1: Docker (recommended for most users)
 
@@ -50,13 +50,31 @@ MobileNet technical | TID2013 | 0.107 |0.652|0.675
 
 2. Install [Docker](https://docs.docker.com/install/)
 
-3. Build docker image `docker build -t nima-cpu . -f Dockerfile.cpu`
+3. Build docker image(s):
+
+   **For NIMA (MobileNet-based models):**
+   ```bash
+   # CPU version (multi-arch: supports x86_64 and ARM64)
+   docker build -t nima-cpu . -f Dockerfile.cpu
+
+   # GPU version (NVIDIA CUDA)
+   docker build -t nima-gpu . -f Dockerfile.gpu
+   ```
+
+   **For MUSIQ (Transformer-based model):**
+   ```bash
+   # CPU version (multi-arch: supports x86_64 and ARM64)
+   docker build -t musiq-cpu . -f Dockerfile.musiq.cpu
+
+   # GPU version (NVIDIA CUDA)
+   docker build -t musiq-gpu . -f Dockerfile.musiq.gpu
+   ```
 
    The Docker build automatically detects your platform architecture (x86_64 or ARM64) and uses the appropriate TensorFlow base image.
 
 ### Option 2: Native Installation (macOS Apple Silicon / Linux)
 
-For running without Docker:
+For running without Docker, with native Metal GPU acceleration on Apple Silicon:
 
 1. Create a Python virtual environment (Python 3.9+ required)
     ```bash
@@ -69,12 +87,9 @@ For running without Docker:
     pip install -r src/requirements.txt
     ```
 
-3. Run training directly (without Docker)
+3. Set the Python path
     ```bash
     export PYTHONPATH="${PYTHONPATH}:$(pwd)/src"
-    python src/trainer/train.py \
-        --job-dir ./train_jobs/my_job \
-        --image-dir /path/to/images
     ```
 
 Note: TensorFlow 2.16+ includes native Apple Silicon support with Metal GPU acceleration built-in.
@@ -84,12 +99,85 @@ Note: TensorFlow 2.16+ includes native Apple Silicon support with Metal GPU acce
 - The training and prediction pipelines run in single-process mode, which provides consistent behavior across all platforms
 
 
-## Predict
-In order to run predictions on an image or batch of images you can run the prediction script.
+## Predict with MUSIQ
 
-The prediction script supports both lowercase and uppercase image extensions (e.g., `.jpg`, `.JPG`, `.png`, `.PNG`).
+MUSIQ provides state-of-the-art aesthetic quality assessment using a Vision Transformer architecture.
+
+### Download the MUSIQ Model
+
+The MUSIQ model files are not included in this repository due to their size (~220MB). You must download them separately:
+
+1. Visit [https://www.kaggle.com/models/google/musiq](https://www.kaggle.com/models/google/musiq)
+2. Select the **TensorFlow2 > ava** variant
+3. Download and extract the model files to `models/MUSIQ/`
+
+Your directory structure should look like:
+```
+models/MUSIQ/
+├── saved_model.pb          # (~220MB - download from Kaggle)
+├── variables/
+│   ├── variables.data-00000-of-00001
+│   └── variables.index
+└── config.json             # (included in this repo)
+```
+
+Alternatively, you can download directly using the Kaggle CLI:
+```bash
+pip install kaggle
+kaggle models instances versions download google/musiq/tensorFlow2/ava/1 -p models/MUSIQ --untar
+```
+
+### Using Native Python
+
+```bash
+export PYTHONPATH="${PYTHONPATH}:$(pwd)/src"
+
+# Single image
+python -m evaluater.predict_musiq \
+  --model-path models/MUSIQ \
+  --image-source path/to/image.jpg
+
+# Directory of images
+python -m evaluater.predict_musiq \
+  --model-path models/MUSIQ \
+  --image-source path/to/images/
+
+# Save predictions to file
+python -m evaluater.predict_musiq \
+  --model-path models/MUSIQ \
+  --image-source path/to/images/ \
+  --predictions-file results.json
+```
 
 ### Using Docker
+
+First, build the MUSIQ Docker image (see [Getting Started](#getting-started)).
+
+```bash
+# Single image (uses musiq-cpu by default)
+./predict-musiq \
+  --model-path $(pwd)/models/MUSIQ \
+  --image-source $(pwd)/src/tests/test_images/42039.jpg
+
+# Directory of images
+./predict-musiq \
+  --model-path $(pwd)/models/MUSIQ \
+  --image-source $(pwd)/src/tests/test_images
+
+# Using GPU version
+./predict-musiq \
+  --docker-image musiq-gpu \
+  --model-path $(pwd)/models/MUSIQ \
+  --image-source $(pwd)/src/tests/test_images
+```
+
+
+## Predict with NIMA
+
+The NIMA prediction script supports both lowercase and uppercase image extensions (e.g., `.jpg`, `.JPG`, `.png`, `.PNG`).
+
+### Using Docker
+
 1. Single image file
     ```bash
     ./predict  \
@@ -109,33 +197,30 @@ The prediction script supports both lowercase and uppercase image extensions (e.
     ```
 
 ### Using Native Python
-First, set the `PYTHONPATH` to include the `src` directory:
+
 ```bash
 export PYTHONPATH="${PYTHONPATH}:$(pwd)/src"
+
+# Single image file
+python -m evaluater.predict \
+  --base-model-name MobileNet \
+  --weights-file models/MobileNet/weights_mobilenet_technical_0.11.hdf5 \
+  --image-source src/tests/test_images/42039.jpg
+
+# All image files in a directory
+python -m evaluater.predict \
+  --base-model-name MobileNet \
+  --weights-file models/MobileNet/weights_mobilenet_technical_0.11.hdf5 \
+  --image-source src/tests/test_images
 ```
 
-1. Single image file
-    ```bash
-    python -m evaluater.predict \
-    --base-model-name MobileNet \
-    --weights-file models/MobileNet/weights_mobilenet_technical_0.11.hdf5 \
-    --image-source src/tests/test_images/42039.jpg
-    ```
 
-2. All image files in a directory
-    ```bash
-    python -m evaluater.predict \
-    --base-model-name MobileNet \
-    --weights-file models/MobileNet/weights_mobilenet_technical_0.11.hdf5 \
-    --image-source src/tests/test_images
-    ```
-
-
-## Train locally
+## Train NIMA locally
 
 1. Download dataset (see instructions under [Datasets](#datasets))
 
 ### Using Docker
+
 2. Run the local training script (e.g. for TID2013 dataset)
     ```bash
     ./train-local \
@@ -158,27 +243,24 @@ In order to stream logs from last launched container run
     ```
 
 ### Using Native Python
-First, set the `PYTHONPATH` to include the `src` directory:
+
 ```bash
 export PYTHONPATH="${PYTHONPATH}:$(pwd)/src"
+
+# Create a train job directory and copy config/samples files
+TRAIN_JOB_DIR=train_jobs/$(date +%Y_%m_%d_%H_%M_%S)
+mkdir -p $TRAIN_JOB_DIR
+cp models/MobileNet/config_technical_cpu.json $TRAIN_JOB_DIR/config.json
+cp data/TID2013/tid_labels_train.json $TRAIN_JOB_DIR/samples.json
+
+# Run training
+python -m trainer.train \
+  --job-dir $TRAIN_JOB_DIR \
+  --image-dir /path/to/image/dir
 ```
 
-2. Create a train job directory and copy config/samples files
-    ```bash
-    TRAIN_JOB_DIR=train_jobs/$(date +%Y_%m_%d_%H_%M_%S)
-    mkdir -p $TRAIN_JOB_DIR
-    cp models/MobileNet/config_technical_cpu.json $TRAIN_JOB_DIR/config.json
-    cp data/TID2013/tid_labels_train.json $TRAIN_JOB_DIR/samples.json
-    ```
-
-3. Run training
-    ```bash
-    python -m trainer.train \
-    --job-dir $TRAIN_JOB_DIR \
-    --image-dir /path/to/image/dir
-    ```
-
 The trained model weights and TensorBoard logs will be stored in the `$TRAIN_JOB_DIR/weights` and `$TRAIN_JOB_DIR/logs` directories respectively.
+
 
 ## Train remotely on AWS EC2
 
@@ -230,11 +312,12 @@ The training progress will be streamed to your terminal. After the training has 
 
 
 ## Contribute
-We welcome all kinds of contributions and will publish the performances from new models in the performance table under [Trained models](#trained-models).
+We welcome all kinds of contributions and will publish the performances from new models in the performance table under [Available Models](#available-models).
 
 For example, to train a new aesthetic NIMA model based on InceptionV3 ImageNet weights, you just have to change the `base_model_name` parameter in the config file `models/MobileNet/config_aesthetic_gpu.json` to "InceptionV3". You can also control all major hyperparameters in the config file, like learning rate, batch size, or dropout rate.
 
 See the [Contribution](CONTRIBUTING.md) guide for more details.
+
 
 ## Datasets
 This project uses two datasets to train the NIMA model:
@@ -278,6 +361,7 @@ data/TID2013/tid2013_labels_test.json
 
 For the AVA dataset we randomly assigned 90% of samples to the train set, and 10% to the test set, and throughout training a 5% validation set will be split from the training set to evaluate the training performance after each epoch. For the TID2013 dataset we split the train/test sets by reference images, to ensure that no reference image, and any of its distortions, enters both the train and test set.
 
+
 ## Serving NIMA with TensorFlow Serving
 TensorFlow versions of both the technical and aesthetic MobileNet models are provided,
 along with the script to generate them from the original Keras files, under the `contrib/tf_serving` directory.
@@ -299,8 +383,36 @@ To get predictions from the aesthetic or technical model:
     python -m contrib.tf_serving.tfs_sample_client --image-path src/tests/test_images/42039.jpg --model-name mobilenet_technical
     ```
 
+
 ## Cite this work
-Please cite Image Quality Assessment in your publications if this is useful for your research. Here is an example BibTeX entry:
+
+If you use this repository, please cite the relevant works:
+
+### NIMA Model
+```BibTeX
+@article{talebi2018nima,
+  title={NIMA: Neural Image Assessment},
+  author={Talebi, Hossein and Milanfar, Peyman},
+  journal={IEEE Transactions on Image Processing},
+  volume={27},
+  number={8},
+  pages={3998--4011},
+  year={2018},
+  publisher={IEEE}
+}
+```
+
+### MUSIQ Model
+```BibTeX
+@inproceedings{ke2021musiq,
+  title={MUSIQ: Multi-scale image quality transformer},
+  author={Ke, Junjie and Wang, Qifei and Wang, Yilin and Milanfar, Peyman and Yang, Feng},
+  booktitle={Proceedings of the IEEE/CVF International Conference on Computer Vision},
+  year={2021}
+}
+```
+
+### This Repository
 ```BibTeX
 @misc{idealods2018imagequalityassessment,
   title={Image Quality Assessment},
@@ -310,10 +422,17 @@ Please cite Image Quality Assessment in your publications if this is useful for 
 }
 ```
 
+
 ## Maintainers
+
+**Current Maintainer:**
+* Robert Li, github: [@dr-robert-li](https://github.com/dr-robert-li)
+
+**Original Authors (idealo):**
 * Christopher Lennan, github: [clennan](https://github.com/clennan)
 * Hao Nguyen, github: [MrBanhBao](https://github.com/MrBanhBao)
 * Dat Tran, github: [datitran](https://github.com/datitran)
+
 
 ## Copyright
 

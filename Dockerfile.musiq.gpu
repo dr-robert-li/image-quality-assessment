@@ -1,3 +1,5 @@
+# MUSIQ Image Quality Assessment - GPU Version (NVIDIA CUDA)
+
 FROM tensorflow/tensorflow:2.16.1-gpu
 
 USER root
@@ -14,13 +16,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       wget && \
     rm -rf /var/lib/apt/lists/*
 
+# Copy source code
 COPY src /src
 COPY entrypoints /src/entrypoints
 
 WORKDIR /src
 
+# Install Python dependencies
 RUN pip install -r requirements.txt
 
 ENV PYTHONPATH='/src/:$PYTHONPATH'
 
-ENTRYPOINT ["entrypoints/entrypoint.train.gpu.sh"]
+# Default entrypoint for MUSIQ prediction
+ENTRYPOINT ["entrypoints/entrypoint.predict.musiq.sh"]

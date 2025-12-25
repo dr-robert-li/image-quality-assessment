@@ -1,0 +1,63 @@
+#!/bin/bash
+set -e
+
+# Default docker image for MUSIQ
+DOCKER_IMAGE="musiq-cpu"
+
+# parse arguments
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    --docker-image)
+    DOCKER_IMAGE="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --model-path)
+    MODEL_PATH="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --image-source)
+    IMAGE_SOURCE="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --predictions-file)
+    PREDICTIONS_FILE="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    *)    # unknown option
+    POSITIONAL+=("$1") # save it in an array for later
+    shift # past argument
+    ;;
+esac
+done
+
+BASENAME_IS=`basename $IMAGE_SOURCE`
+BASENAME_MP=`basename $MODEL_PATH`
+
+# Build docker run command
+DOCKER_RUN="docker run
+  --entrypoint entrypoints/entrypoint.predict.musiq.sh
+  -v \"$IMAGE_SOURCE\":/src/$BASENAME_IS
+  -v \"$MODEL_PATH\":/src/models/$BASENAME_MP
+  $DOCKER_IMAGE /src/models/$BASENAME_MP /src/$BASENAME_IS"
+
+# Add predictions file if specified
+if [ ! -z "$PREDICTIONS_FILE" ]; then
+    PREDICTIONS_DIR=$(dirname "$PREDICTIONS_FILE")
+    PREDICTIONS_BASENAME=$(basename "$PREDICTIONS_FILE")
+    DOCKER_RUN="docker run
+      --entrypoint entrypoints/entrypoint.predict.musiq.sh
+      -v \"$IMAGE_SOURCE\":/src/$BASENAME_IS
+      -v \"$MODEL_PATH\":/src/models/$BASENAME_MP
+      -v \"$PREDICTIONS_DIR\":/src/predictions
+      $DOCKER_IMAGE /src/models/$BASENAME_MP /src/$BASENAME_IS /src/predictions/$PREDICTIONS_BASENAME"
+fi
+
+eval $DOCKER_RUN

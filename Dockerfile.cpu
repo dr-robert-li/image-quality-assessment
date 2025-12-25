@@ -6,6 +6,8 @@ FROM armswdev/tensorflow-arm-neoverse:r24.07-tf-2.16.1-eigen AS base-arm64
 
 FROM base-${TARGETARCH}
 
+USER root
+
 # Install system packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
       bzip2 \

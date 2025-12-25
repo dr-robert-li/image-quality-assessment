@@ -101,7 +101,9 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-
+# MUSIQ Model Files (download from Kaggle)
+models/MUSIQ/saved_model.pb
+models/MUSIQ/variables/
 # End of https://www.gitignore.io/api/python
 
 # Custom

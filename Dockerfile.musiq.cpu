@@ -1,4 +1,12 @@
-FROM tensorflow/tensorflow:2.16.1-gpu
+# MUSIQ Image Quality Assessment - CPU Version
+# Multi-architecture support: x86_64 and ARM64
+
+ARG TARGETARCH
+
+FROM tensorflow/tensorflow:2.16.1 AS base-amd64
+FROM armswdev/tensorflow-arm-neoverse:r24.07-tf-2.16.1-eigen AS base-arm64
+
+FROM base-${TARGETARCH}
 
 USER root
 
@@ -14,13 +22,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       wget && \
     rm -rf /var/lib/apt/lists/*
 
+# Copy source code
 COPY src /src
 COPY entrypoints /src/entrypoints
 
 WORKDIR /src
 
+# Install Python dependencies
 RUN pip install -r requirements.txt
 
 ENV PYTHONPATH='/src/:$PYTHONPATH'
 
-ENTRYPOINT ["entrypoints/entrypoint.train.gpu.sh"]
+# Default entrypoint for MUSIQ prediction
+ENTRYPOINT ["entrypoints/entrypoint.predict.musiq.sh"]
