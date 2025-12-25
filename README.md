@@ -44,17 +44,38 @@ MobileNet technical | TID2013 | 0.107 |0.652|0.675
 
 ## Getting started
 
+### Option 1: Docker (recommended for most users)
+
 1. Install [jq](https://stedolan.github.io/jq/download/)
 
 2. Install [Docker](https://docs.docker.com/install/)
 
 3. Build docker image `docker build -t nima-cpu . -f Dockerfile.cpu`
 
-In order to train remotely on **AWS EC2**
+### Option 2: Native macOS Apple Silicon (M1/M2/M3/M4)
 
-4. Install [Docker Machine](https://docs.docker.com/machine/install-machine/)
+For GPU-accelerated training on Apple Silicon Macs without Docker:
 
-5. Install [AWS Command Line Interface](https://docs.aws.amazon.com/cli/latest/userguide/installing.html)
+1. Create a Python virtual environment (Python 3.9+ required)
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
+
+2. Install macOS-specific dependencies
+    ```bash
+    pip install -r src/requirements-macos.txt
+    ```
+
+3. Run training directly (without Docker)
+    ```bash
+    export PYTHONPATH="${PYTHONPATH}:$(pwd)/src"
+    python src/trainer/train.py \
+        --job-dir ./train_jobs/my_job \
+        --image-dir /path/to/images
+    ```
+
+Note: `tensorflow-macos` provides the base TensorFlow for ARM64, and `tensorflow-metal` enables GPU acceleration via Apple's Metal framework.
 
 
 ## Predict
