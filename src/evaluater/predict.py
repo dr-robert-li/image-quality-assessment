@@ -16,18 +16,23 @@ def image_file_to_json(img_path):
 
 
 def image_dir_to_json(img_dir, img_type='jpg'):
-    img_paths = glob.glob(os.path.join(img_dir, '*.'+img_type))
+    # Search for both lowercase and uppercase extensions
+    img_paths = glob.glob(os.path.join(img_dir, '*.'+img_type.lower()))
+    img_paths += glob.glob(os.path.join(img_dir, '*.'+img_type.upper()))
 
     samples = []
+    actual_ext = None
     for img_path in img_paths:
         img_id = os.path.basename(img_path).split('.')[0]
         samples.append({'image_id': img_id})
+        if actual_ext is None:
+            actual_ext = os.path.splitext(img_path)[1][1:]  # Get extension without dot
 
-    return samples
+    return samples, actual_ext if actual_ext else img_type
 
 
 def predict(model, data_generator):
-    return model.predict(data_generator, workers=8, use_multiprocessing=True, verbose=1)
+    return model.predict(data_generator, verbose=1)
 
 
 def main(base_model_name, weights_file, image_source, predictions_file, img_format='jpg'):
@@ -36,7 +41,7 @@ def main(base_model_name, weights_file, image_source, predictions_file, img_form
         image_dir, samples = image_file_to_json(image_source)
     else:
         image_dir = image_source
-        samples = image_dir_to_json(image_dir, img_type='jpg')
+        samples, img_format = image_dir_to_json(image_dir, img_type='jpg')
 
     # build model and load weights
     nima = Nima(base_model_name, weights=None)

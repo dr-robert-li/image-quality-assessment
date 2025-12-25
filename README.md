@@ -52,6 +52,8 @@ MobileNet technical | TID2013 | 0.107 |0.652|0.675
 
 3. Build docker image `docker build -t nima-cpu . -f Dockerfile.cpu`
 
+   The Docker build automatically detects your platform architecture (x86_64 or ARM64) and uses the appropriate TensorFlow base image.
+
 ### Option 2: Native Installation (macOS Apple Silicon / Linux)
 
 For running without Docker:
@@ -77,9 +79,15 @@ For running without Docker:
 
 Note: TensorFlow 2.16+ includes native Apple Silicon support with Metal GPU acceleration built-in.
 
+### ARM64 Compatibility Notes
+- Multiprocessing has been disabled in the prediction pipeline to ensure compatibility with ARM64 architectures (Apple Silicon, ARM-based Linux)
+- The training and prediction pipelines run in single-process mode, which provides consistent behavior across all platforms
+
 
 ## Predict
 In order to run predictions on an image or batch of images you can run the prediction script.
+
+The prediction script supports both lowercase and uppercase image extensions (e.g., `.jpg`, `.JPG`, `.png`, `.PNG`).
 
 ### Using Docker
 1. Single image file
