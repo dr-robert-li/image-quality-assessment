@@ -1,4 +1,10 @@
-FROM tensorflow/tensorflow:2.16.1
+# Auto-detect architecture: use ARM64 image on Apple Silicon, x86 image otherwise
+ARG TARGETARCH
+
+FROM tensorflow/tensorflow:2.16.1 AS base-amd64
+FROM armswdev/tensorflow-arm-neoverse:r24.07-tf-2.16.1-eigen AS base-arm64
+
+FROM base-${TARGETARCH}
 
 # Install system packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
