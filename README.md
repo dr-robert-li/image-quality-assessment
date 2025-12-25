@@ -52,9 +52,9 @@ MobileNet technical | TID2013 | 0.107 |0.652|0.675
 
 3. Build docker image `docker build -t nima-cpu . -f Dockerfile.cpu`
 
-### Option 2: Native macOS Apple Silicon (M1/M2/M3/M4)
+### Option 2: Native Installation (macOS Apple Silicon / Linux)
 
-For GPU-accelerated training on Apple Silicon Macs without Docker:
+For running without Docker:
 
 1. Create a Python virtual environment (Python 3.9+ required)
     ```bash
@@ -62,9 +62,9 @@ For GPU-accelerated training on Apple Silicon Macs without Docker:
     source venv/bin/activate
     ```
 
-2. Install macOS-specific dependencies
+2. Install dependencies
     ```bash
-    pip install -r src/requirements-macos.txt
+    pip install -r src/requirements.txt
     ```
 
 3. Run training directly (without Docker)
@@ -75,12 +75,13 @@ For GPU-accelerated training on Apple Silicon Macs without Docker:
         --image-dir /path/to/images
     ```
 
-Note: `tensorflow-macos` provides the base TensorFlow for ARM64, and `tensorflow-metal` enables GPU acceleration via Apple's Metal framework.
+Note: TensorFlow 2.16+ includes native Apple Silicon support with Metal GPU acceleration built-in.
 
 
 ## Predict
-In order to run predictions on an image or batch of images you can run the prediction script
+In order to run predictions on an image or batch of images you can run the prediction script.
 
+### Using Docker
 1. Single image file
     ```bash
     ./predict  \
@@ -99,11 +100,34 @@ In order to run predictions on an image or batch of images you can run the predi
     --image-source $(pwd)/src/tests/test_images
     ```
 
+### Using Native Python
+First, set the `PYTHONPATH` to include the `src` directory:
+```bash
+export PYTHONPATH="${PYTHONPATH}:$(pwd)/src"
+```
 
-## Train locally on CPU
+1. Single image file
+    ```bash
+    python -m evaluater.predict \
+    --base-model-name MobileNet \
+    --weights-file models/MobileNet/weights_mobilenet_technical_0.11.hdf5 \
+    --image-source src/tests/test_images/42039.jpg
+    ```
+
+2. All image files in a directory
+    ```bash
+    python -m evaluater.predict \
+    --base-model-name MobileNet \
+    --weights-file models/MobileNet/weights_mobilenet_technical_0.11.hdf5 \
+    --image-source src/tests/test_images
+    ```
+
+
+## Train locally
 
 1. Download dataset (see instructions under [Datasets](#datasets))
 
+### Using Docker
 2. Run the local training script (e.g. for TID2013 dataset)
     ```bash
     ./train-local \
@@ -124,6 +148,29 @@ In order to stream logs from last launched container run
     CONTAINER_ID=$(docker ps -l -q)
     docker logs $CONTAINER_ID --follow
     ```
+
+### Using Native Python
+First, set the `PYTHONPATH` to include the `src` directory:
+```bash
+export PYTHONPATH="${PYTHONPATH}:$(pwd)/src"
+```
+
+2. Create a train job directory and copy config/samples files
+    ```bash
+    TRAIN_JOB_DIR=train_jobs/$(date +%Y_%m_%d_%H_%M_%S)
+    mkdir -p $TRAIN_JOB_DIR
+    cp models/MobileNet/config_technical_cpu.json $TRAIN_JOB_DIR/config.json
+    cp data/TID2013/tid_labels_train.json $TRAIN_JOB_DIR/samples.json
+    ```
+
+3. Run training
+    ```bash
+    python -m trainer.train \
+    --job-dir $TRAIN_JOB_DIR \
+    --image-dir /path/to/image/dir
+    ```
+
+The trained model weights and TensorBoard logs will be stored in the `$TRAIN_JOB_DIR/weights` and `$TRAIN_JOB_DIR/logs` directories respectively.
 
 ## Train remotely on AWS EC2
 

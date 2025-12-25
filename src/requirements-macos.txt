@@ -1,8 +1,0 @@
-# Requirements for native macOS Apple Silicon (M1/M2/M3/M4)
-# Use this instead of Docker for GPU-accelerated training on Mac
-
-tensorflow-macos>=2.16.0
-tensorflow-metal>=1.1.0
-nose
-scikit-learn
-pillow>=9.0.0

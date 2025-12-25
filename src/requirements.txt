@@ -1,3 +1,4 @@
+tensorflow>=2.16.0
 nose
 scikit-learn
 pillow>=9.0.0
