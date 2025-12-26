@@ -107,7 +107,7 @@ MUSIQ provides state-of-the-art aesthetic quality assessment using a Vision Tran
 The MUSIQ model files are not included in this repository due to their size (~220MB). You must download them separately:
 
 1. Visit [https://www.kaggle.com/models/google/musiq](https://www.kaggle.com/models/google/musiq)
-2. Select the **TensorFlow2 > ava** variant
+2. Select any variant. They should all work but this was tested using the **ava** pretrained variant
 3. Download and extract the model files to `models/MUSIQ/`
 
 Your directory structure should look like:
